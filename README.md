@@ -39,7 +39,7 @@ Before you begin, ensure you have installed:
 3. Additional Features:
    - Click 'Clear' to erase the entire canvas
    - Click 'Save' to download the drawing as PNG
-
+  
 ## Tech Stack
 
 - Frontend:
@@ -57,6 +57,50 @@ Before you begin, ensure you have installed:
 
 - express: ^4.18.2
 - socket.io: ^4.7.2
+
+
+
+## 🚀 Getting Started
+Dear Sir,
+
+To run this project locally, please follow these simple steps:
+
+### Initialize the Project
+First, we need to initialize the Node.js project and create the necessary configuration files:
+
+bash
+Initialize a new Node.js project
+npm init -y
+
+
+###  Install Required Dependencies
+Install the necessary packages that power our whiteboard:
+
+bash
+Install Express and Socket.IO
+npm install express socket.io
+
+
+This command will automatically:
+- Create `node_modules` folder
+- Generate `package-lock.json`
+- Update `package.json` with the required dependencies
+
+
+
+
+###  Start the Server
+
+bash
+Run the server
+node server.js
+
+
+###  Access the Application
+Open your web browser and visit the server link that is being showed in the terminal 2 times, do changes in the 1st tab and you'll notice that the changes you did are visible in the 2nd tab as well :)
+
+
+
 
 
 
