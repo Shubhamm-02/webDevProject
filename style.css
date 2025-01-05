@@ -1,0 +1,36 @@
+body {
+    margin: 0;
+    font-family: Arial, Helvetica, sans-serif;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    height: 100vh;
+    background-color: lightblue;
+  }
+  
+  #toolbar {
+    display: flex;
+    gap: 10px;
+    margin-bottom: 10px;
+  }
+  
+  button {
+    padding: 10px 15px;
+    border: none;
+    background-color: bisque;
+    color: darkslategrey;
+    cursor: pointer;
+    border-radius: 10px;
+  }
+  
+  button:hover {
+    background-color: rgb(218, 162, 197);
+  }
+  
+  canvas {
+    border: 1px solid #000000;
+    background-color: white;
+    cursor: crosshair;
+  }
+
+  

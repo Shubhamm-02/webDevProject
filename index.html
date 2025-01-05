@@ -1,0 +1,173 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>RTWhiteBoard</title>
+    <link rel="stylesheet" href="style.css" />
+
+    <script src="https://cdn.socket.io/4.0.1/socket.io.min.js"></script>
+  </head>
+  <body>
+    <div id="toolbar">
+      <button id="pencil">Pencil</button>
+      <button id="eraser">Eraser</button>
+      <button id="clear">Clear</button>
+    </div>
+    <canvas id="whiteboard" width="800" height="600"></canvas>
+
+    <script>
+      const canvas = document.getElementById("whiteboard");
+      const ctx = canvas.getContext("2d");
+      const pencil = document.getElementById("pencil");
+      const eraser = document.getElementById("eraser");
+      const clear = document.getElementById("clear");
+      const socket = io({
+        reconnection: true,
+        reconnectionAttempts: 5,
+        reconnectionDelay: 1000,
+        transports: ['websocket', 'polling']
+      });
+
+      let isDrawing = false;
+      let lastX = 0;
+      let lastY = 0;
+      let currentTool = "pencil";
+      let pencilColor = "black";
+      let lineWidth = 2;
+
+      
+      ctx.lineCap = 'round';
+      ctx.lineJoin = 'round';
+
+      canvas.addEventListener("mousedown", (e) => {
+        isDrawing = true;
+        [lastX, lastY] = [e.offsetX, e.offsetY];
+      });
+
+      canvas.addEventListener("mouseup", () => (isDrawing = false));
+      canvas.addEventListener("mouseout", () => (isDrawing = false));
+
+      clear.addEventListener("click", () => {
+        console.log("Clear button clicked");
+        
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        console.log("Local canvas cleared");
+        
+        socket.emit("clear");
+        console.log("Clear event emitted");
+      });
+
+      pencil.addEventListener("click", () => (currentTool = "pencil"));
+      eraser.addEventListener("click", () => (currentTool = "eraser"));
+
+      const colorPicker = document.createElement("input");
+      colorPicker.type = "color";
+      colorPicker.value = "#000000";
+      colorPicker.addEventListener("input", (e) => {
+        pencilColor = e.target.value;
+      });
+      document.getElementById("toolbar").appendChild(colorPicker);
+
+      const lineWidthInput = document.createElement("input");
+      lineWidthInput.type = "range";
+      lineWidthInput.min = 1;
+      lineWidthInput.max = 10;
+      lineWidthInput.value = 2;
+      lineWidthInput.addEventListener("input", (e) => {
+        lineWidth = e.target.value;
+      });
+      document.getElementById("toolbar").appendChild(lineWidthInput);
+
+      const saveButton = document.createElement("button");
+      saveButton.textContent = "Save";
+      saveButton.style.backgroundColor = "#28a745";
+      saveButton.addEventListener("click", () => {
+        const image = canvas.toDataURL("image/png");
+        const link = document.createElement("a");
+        link.href = image;
+        link.download = "whiteboard.png";
+        link.click();
+      });
+      document.getElementById("toolbar").appendChild(saveButton);
+
+      socket.on("connect", () => {
+        console.log("Connected to server with ID:", socket.id);
+      });
+
+      socket.on('connect_error', (error) => {
+        console.error('Connection error:', error);
+      });
+
+      socket.on('connect_timeout', () => {
+        console.error('Connection timeout');
+      });
+
+      socket.on('error', (error) => {
+        console.error('Socket error:', error);
+      });
+
+      canvas.addEventListener("mousemove", (e) => {
+        if (!isDrawing) return;
+        
+        const drawData = {
+          tool: currentTool || 'pencil',
+          color: pencilColor || '#000',
+          width: lineWidth || 2,
+          startX: lastX,
+          startY: lastY,
+          endX: e.offsetX,
+          endY: e.offsetY
+        };
+
+        ctx.beginPath();
+        ctx.moveTo(lastX, lastY);
+        ctx.lineTo(e.offsetX, e.offsetY);
+        ctx.strokeStyle = drawData.color;
+        ctx.lineWidth = drawData.width;
+        ctx.stroke();
+
+        socket.emit('draw', drawData);
+        console.log("Emitted draw data:", drawData);
+
+        [lastX, lastY] = [e.offsetX, e.offsetY];
+      });
+
+      socket.on("draw", (data) => {
+        console.log("Received draw data:", data);
+        
+        ctx.save();
+        
+        ctx.beginPath();
+        ctx.moveTo(data.startX, data.startY);
+        ctx.lineTo(data.endX, data.endY);
+        
+        
+        if (data.tool === "eraser") {
+          ctx.strokeStyle = "white";  
+          ctx.lineWidth = data.width || 20;
+        } else {
+          ctx.strokeStyle = data.color || '#000';
+          ctx.lineWidth = data.width || 2;
+        }
+        
+        ctx.stroke();
+        
+        ctx.restore();
+        
+        console.log("Drawing completed with properties:", {
+          color: ctx.strokeStyle,
+          width: ctx.lineWidth,
+          from: `${data.startX},${data.startY}`,
+          to: `${data.endX},${data.endY}`
+        });
+      });
+
+      socket.on("clear", () => {
+        console.log("Received clear command from server");
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        console.log("Canvas cleared by server command");
+      });
+    </script>
+  </body>
+</html>
